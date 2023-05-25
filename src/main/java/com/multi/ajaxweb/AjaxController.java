@@ -1,21 +1,28 @@
 package com.multi.ajaxweb;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.multi.domain.UserVO;
 
 import lombok.extern.log4j.Log4j;
-
+//@RestController : restful방식을 지원
 @Controller
 @Log4j
 public class AjaxController {
@@ -79,9 +86,36 @@ public class AjaxController {
 		arr.add(new UserVO(300,"손길동","3333","광주"));
 		return arr;
 	}
+	//파일 업로드 ajax
+	@PostMapping(value="/ajaxFile", produces="application/json")
+	@ResponseBody
+	public ModelMap ajaxFile(HttpServletRequest req,@RequestParam("filename") MultipartFile mf) {
+		ServletContext ctx=req.getServletContext();
+		String upDir=ctx.getRealPath("/resources/Upload");
+		File dir=new File(upDir);
+		if(!dir.exists()) {
+			dir.mkdirs();			
+		}
+		log.info("upDir: "+upDir);
+		String fname=mf.getOriginalFilename();
+		log.info("fname: "+fname);
+		try {
+			mf.transferTo(new File(upDir, fname));
+		}catch(IOException e) {
+			log.error(e);
+		}
+		ModelMap map=new ModelMap("result","OK");
+		map.put("filename", fname);
+		return map;
+	}
+	
+	//{result:OK} {result:Fail}
 	
 
 }
+
+
+
 
 
 
