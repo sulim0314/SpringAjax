@@ -2,5 +2,52 @@
  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.multi.mapper.BookMapper">
+	<sql id="book_columns">
+		isbn,title,publish,price,published,bimage
+	</sql>
+
+	<select id="getAllBook" resultType="Book">
+		select isbn,title,publish,price,published,bimage
+		from book order by 1
+	</select>
 	
+	<select id="getBookInfo" resultType="Book" parameterType="string">
+		select
+		<include refid="book_columns"/>
+		from book
+		<where>
+			isbn=#{value}
+		</where>
+	</select>
+	
+	<update id="updateBook" parameterType="Book">
+		update book set title=#{title}, publish=#{publish},
+		price=#{price}
+		<if test="bimage !=null and bimage !=''">
+		, bimage=#{bimage}
+		</if>
+		<where>
+			isbn=#{isbn}
+		</where>	
+	</update>
+	
+	<delete id="deleteBook" parameterType="string">
+		delete from book where isbn=#{value}
+	</delete>	
+	
+	<select id="getPublishList" resultType="Book">
+		select distinct publish from book order by 1 asc
+	</select>
+	<select id="getTitleList" resultType="Book" parameterType="string">
+		select title from book  
+		<where>
+		publish = #{value}
+		</where>
+		order by 1 asc
+	</select>
 </mapper>
+
+
+
+
+

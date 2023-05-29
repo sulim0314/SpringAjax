@@ -15,8 +15,12 @@
 	src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <!-- ------------------------------------------------- -->
 <style type="text/css">
-
-
+select{
+	padding:5px;
+}
+#sel, #sel2{
+   margin:5px;
+}
 </style>
 
 
@@ -27,23 +31,199 @@
 	});
 	//GET  /books :모든 도서정보가져오기
 	//GET  /books/isbn번호 : 특정 도서정보 가져오기
+	//POST /books : 도서정보 등록
+	//PUT  /books/isbn번호 : 특정 도서정보 수정하기
+	//DELETE /books/isbn번호 : 특정 도서정보 삭제하기
+	
+	const getPublish=function(){
+		$.ajax({
+			type:'get',
+			url:'publishList',
+			dataType:'json',
+			cache:false
+		})
+		.done((res)=>{
+			//alert(JSON.stringify(res))
+			showSelect(res);
+		})
+		.fail((err)=>{
+			alert(err.status);
+		})
+	}//--------------------------
+	
+	const showSelect=function(data){
+		let str='<select name="publish" onchange="getTitleByPub(this.value)">';
+		str+='<option value="">::출판사 목록:::</option>';
+		$.each(data,(i, book)=>{		
+			str+='<option value="'+book.publish+'">';
+			str+=book.publish;
+			str+='</option>'
+		});	
+			
+			str+='</select>';
+			
+			$('#sel').html(str);
+	}//----------------------------
+	
+	const getTitleByPub=function(pub){
+		//alert(pub);
+		$.ajax({
+			type:'get',
+			url:'titleList?publish='+pub,
+			dataType:'json',
+			cache:false
+		})
+		.done((res)=>{
+			showSelect2(res);
+		})
+		.fail((err)=>{
+			alert(err.status);
+		})
+		
+	}//--------------------------------
+	const showSelect2=function(data){
+		let str='<select name="publishTitle" onchange="bookInfo(this.value)">';
+		str+='<option value="">::도 서 명:::</option>';
+		$.each(data,(i, book)=>{		
+			str+='<option value="'+book.title+'">';
+			str+=book.title;
+			str+='</option>'
+		});	
+			
+			str+='</select>';
+			
+			$('#sel2').html(str);
+	}//----------------------------
+	
+	const goDel=function(visbn){
+		//alert(visbn);
+		let url="books/"+visbn;
+		$.ajax({
+			type:'delete',
+			url:url,
+			dataType:'json',
+			cache:false,
+			success:function(res){
+				//alert(res);//'{result:OK}'
+				if(res.result=='OK'){
+					getAllBook();
+				}else{
+					alert('도서 정보 삭제 실패');
+				}
+			},
+			error:function(err){
+				alert(err.status);
+			}
+		})		
+	}//----------------------------
+	//도서정보 수정처리
+	const goEditEnd=function(){			
+		let bn=$('#isbn').val()
+		let btitle=$('#title').val();
+		let pub=$('#publish').val();
+		let price=$('#price').val();
+		//let pdate=$('#published').val();
+		let jsonData={
+				isbn:bn,
+				title:btitle,
+				publish:pub,
+				price:price				
+		};
+		//alert(JSON.stringify(jsonData))
+		$.ajax({
+			type:'put',
+			url:'books/'+bn,
+			data:JSON.stringify(jsonData),
+			contentType:'application/json; charset=UTF-8',
+			dataType:'json',
+			cache:false,
+			success:function(res){
+				//alert(res);//{result:'OK'}
+				if(res.result=='OK'){
+					getAllBook()
+				}else{
+					alert('도서 정보 수정 실패');
+				}
+			},
+			error:function(err){
+				alert(err.status);		
+			}
+		})
+	}//---------------------------------
+	
+	//도서정보 보여주기
+	const goEdit=function(visbn){
+		//alert(visbn);
+		$.ajax({
+			type:'get',
+			url:'books/'+visbn,
+			dataType:'json',
+			success:function(res){
+				//alert(JSON.stringify(res))
+				$('#isbn').val(res.isbn);
+				$('#title').val(res.title);
+				$('#publish').val(res.publish);
+				$('#price').val(res.price);
+				$('#published').val(res.published);
+				let str='<img src="resources/Upload/'+res.bimage+'" class="img img-thumbnail">'				
+				$('#bimage').html(str);
+			},
+			error:function(err){
+				alert(err.status);
+			}
+		})
+	}//----------------------------
+	
+	
 	const getAllBook=function(){
 		$.ajax({
 			type:'get',
 			url:'/books',
 			dataType:'json',
 			success:function(res){
-				alert(JSON.stringify(res))
+				//alert(JSON.stringify(res))
+				showBooks(res);
 			},
 			error:function(err){
 				alert(err.status)
 			}
 		})
-	}
+	}//-----------------------------
+	const showBooks=function(res){
+		let str='<table class="table table-bordered">';
+		$.each(res, (i, book)=>{
+			str+='<tr>';
+			str+='<td width="20%">';
+			str+=book.title;
+			str+='</td>';
+			
+			str+='<td width="20%">';
+			str+=book.publish;
+			str+='</td>';
+			
+			str+='<td width="20%">';
+			str+=book.price;
+			str+='</td>';
+			
+			str+='<td width="20%">';
+			str+=book.published;
+			str+='</td>';
+			
+			str+='<td width="20%" style="text-align:center">';
+			str+='<a href="#book_data" onclick="goEdit(\''+book.isbn+'\')">수정</a> | ';			
+			str+='<a href="#book_data" onclick="goDel(\''+book.isbn+'\')">삭제</a>';
+			str+='</td>';
+
+			str+='</tr>';
+		    })
+			str+='</table>';
+		$('#book_data').html(str);
+	}//-------------------------------
+	
 </script>
 </head>
 <!--onload시 출판사 목록 가져오기  -->
-<body onload="">
+<body onload="getPublish()">
    <div class="container">
 	<h2 id="msg">${msg}</h2>
 <form name="findF" id="findF" role="form"
@@ -82,7 +262,11 @@
 </div>
 <div id="localBook">
 
-<table class="table table-bordered" border="1">
+<div id="publishList">
+
+</div>
+
+<table class="table table-bordered" border="1" style='margin-bottom:0'>
 	<tr class="info">
 		<td style="width:20%;">서명</td>
 		<td style="width:20%;">출판사</td>
