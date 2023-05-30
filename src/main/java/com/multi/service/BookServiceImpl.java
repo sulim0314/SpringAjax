@@ -50,9 +50,19 @@ public class BookServiceImpl implements BookService{
 	}
 
 	@Override
-	public List<BookVO> getFindBook(String title) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<BookVO> getFindBook(String title) {		
+		return bMapper.getFindBook(title);
+	}
+
+	@Override
+	public List<String> getAutoComplete(String keyword) {		
+		return bMapper.getAutoComplete(keyword);
 	}
 
 }
+
+
+
+
+
+
